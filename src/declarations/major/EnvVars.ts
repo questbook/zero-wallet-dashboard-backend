@@ -19,4 +19,7 @@ export default {
     secret: (process.env.JWT_SECRET ??  ''),
     exp: (process.env.COOKIE_EXP ?? ''), // exp at the same time as the cookie
   },
+  dashboardProjectId: (process.env.DASHBOARD_PROJECT_ID ?? ''),
+  dashboardGasTankName: (process.env.DASHBOARD_GAS_TANK_NAME ?? ''),
+  dashboardOrigin: (process.env.DASHBOARD_ORIGIN ?? ''),
 } as const;
