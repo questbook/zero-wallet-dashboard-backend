@@ -2,7 +2,7 @@ import HttpStatusCodes from '@src/declarations/major/HttpStatusCodes';
 
 import { IReq, IRes } from './shared/types';
 
-import { getReadyGasTank } from '../projectManager';
+import { getReadyGasTankApiKey } from '../projectManager';
 
 // **** Variables **** //
 
@@ -33,9 +33,9 @@ async function authorize(req: IReq<IAuthReq>, res: IRes) {
   const { zeroWalletAddress, gasTankName } = req.body;
   const projectApiKey = req.params.apiKey;
 
-  const gasTank = await getReadyGasTank(
+  const gasTank = await getReadyGasTankApiKey(
     projectApiKey, 
-    parseInt("5"),
+    gasTankName,
   );
 
   if (!gasTank) {
@@ -57,9 +57,9 @@ async function getNonce(req: IReq<IAuthReq>, res: IRes) {
   const { zeroWalletAddress, gasTankName } = req.body;
   const projectApiKey = req.params.apiKey;
 
-  const gasTank = await getReadyGasTank(
+  const gasTank = await getReadyGasTankApiKey(
     projectApiKey, 
-    parseInt("5"),
+    gasTankName,
   );
 
   if (!gasTank) {
@@ -82,9 +82,9 @@ async function refreshNonce(req: IReq<IAuthReq>, res: IRes) {
   const { zeroWalletAddress, gasTankName } = req.body;
   const projectApiKey = req.params.apiKey;
 
-  const gasTank = await getReadyGasTank(
+  const gasTank = await getReadyGasTankApiKey(
     projectApiKey, 
-    parseInt("5"),
+    gasTankName,
   );
   
   if (!gasTank) {

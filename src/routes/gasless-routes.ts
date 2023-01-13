@@ -7,7 +7,7 @@ import {
 import { DeployWebHookAttributesType } from '@src/types/zerowallet';
 import { IReq, IRes } from './shared/types';
 
-import { getReadyGasTank } from '../projectManager';
+import { getReadyGasTankApiKey } from '../projectManager';
 
 // **** Variables **** //
 
@@ -51,9 +51,9 @@ async function build(req: IReq<IBuildReq>, res: IRes) {
   const projectApiKey = req.params.apiKey;
   const { zeroWalletAddress, data, webHookAttributes, gasTankName } = req.body;
 
-  const gasTank = await getReadyGasTank(
+  const gasTank = await getReadyGasTankApiKey(
     projectApiKey, 
-    parseInt("5"),
+    gasTankName,
   );
 
   if (!gasTank) {
@@ -87,9 +87,9 @@ async function send(req: IReq<ISendReq>, res: IRes) {
     gasTankName,
   } = req.body;
   
-  const gasTank = await getReadyGasTank(
+  const gasTank = await getReadyGasTankApiKey(
     projectApiKey, 
-    parseInt("5"),
+    gasTankName,
   );
 
   if (!gasTank) {
@@ -123,9 +123,9 @@ async function deploy(req: IReq<IDeployReq>, res: IRes) {
   const { zeroWalletAddress, gasTankName, webHookAttributes } = req.body;
   const projectApiKey = req.params.apiKey;
 
-  const gasTank = await getReadyGasTank(
+  const gasTank = await getReadyGasTankApiKey(
     projectApiKey, 
-    parseInt("5"),
+    gasTankName,
   );
 
   if (!gasTank) {
