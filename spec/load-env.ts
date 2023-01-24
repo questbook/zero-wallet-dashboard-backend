@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 // **** Load test env file **** //
 
 const result2 = dotenv.config({
-  path: `./env/test.env`,
+  path: `./env/development.env`,
 });
 
 if (result2.error) {
