@@ -3,3 +3,4 @@ dist/
 **/**/*.log
 config.yaml
 env/
+.DS_Store
