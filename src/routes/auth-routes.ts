@@ -8,20 +8,18 @@ import { getReadyGasTankApiKey } from '../projectManager';
 
 // Paths
 const paths = {
-  basePath: '/:apiKey/auth',
-  authorize: '/authorize',
-  getNonce: '/getNonce',
-  refreshNonce: '/refreshNonce',
+    basePath: '/auth',
+    authorize: '/:apiKey/authorize',
+    getNonce: '/:apiKey/getNonce',
+    refreshNonce: '/:apiKey/refreshNonce',
 } as const;
-
 
 // **** Types **** //
 
 interface IAuthReq {
-  zeroWalletAddress: string;
-  gasTankName: string;
+    zeroWalletAddress: string;
+    chainId: string;
 }
-
 
 // **** Functions **** //
 
@@ -29,84 +27,70 @@ interface IAuthReq {
  * Add an authorized user to the database
  */
 async function authorize(req: IReq<IAuthReq>, res: IRes) {
+    const { zeroWalletAddress, chainId } = req.body;
+    const projectApiKey = req.params.apiKey;
 
-  const { zeroWalletAddress, gasTankName } = req.body;
-  const projectApiKey = req.params.apiKey;
+    const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
-  const gasTank = await getReadyGasTankApiKey(
-    projectApiKey, 
-    gasTankName,
-  );
+    if (!gasTank) {
+        return res
+            .status(HttpStatusCodes.BAD_REQUEST)
+            .json({ error: `Gas tank '${chainId}' not found` });
+    }
 
-  if (!gasTank) {
-    return res.status(HttpStatusCodes.BAD_REQUEST).json(
-      { error: `Gas tank '${gasTankName}' not found` },
-    );
-  }
+    await gasTank.addAuthorizedUser(zeroWalletAddress);
 
-  await gasTank.addAuthorizedUser(zeroWalletAddress);
-
-  return res.status(HttpStatusCodes.OK).end();
+    return res.status(HttpStatusCodes.OK).end();
 }
 
 /**
  * Get the nonce of an authorized user
  */
 async function getNonce(req: IReq<IAuthReq>, res: IRes) {
+    const { zeroWalletAddress, chainId } = req.body;
+    const projectApiKey = req.params.apiKey;
 
-  const { zeroWalletAddress, gasTankName } = req.body;
-  const projectApiKey = req.params.apiKey;
+    const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
-  const gasTank = await getReadyGasTankApiKey(
-    projectApiKey, 
-    gasTankName,
-  );
+    if (!gasTank) {
+        return res
+            .status(HttpStatusCodes.BAD_REQUEST)
+            .json({ error: `Gas tank '${chainId}' not found` });
+    }
 
-  if (!gasTank) {
-    return res.status(HttpStatusCodes.BAD_REQUEST).json(
-      { error: `Gas tank '${gasTankName}' not found` },
-    );
-  }
+    const nonce = await gasTank.getNonce(zeroWalletAddress);
 
-  const nonce = await gasTank.getNonce(zeroWalletAddress);
+    if (!nonce) {
+        return res.status(HttpStatusCodes.OK).json({ nonce: 'Token expired' });
+    }
 
-  if(!nonce){
-    return res.status(HttpStatusCodes.OK).json({ nonce: 'Token expired' });
-  }
-
-  return res.status(HttpStatusCodes.OK).json({ nonce: nonce });
+    return res.status(HttpStatusCodes.OK).json({ nonce: nonce });
 }
 
 async function refreshNonce(req: IReq<IAuthReq>, res: IRes) {
+    const { zeroWalletAddress, chainId } = req.body;
+    const projectApiKey = req.params.apiKey;
 
-  const { zeroWalletAddress, gasTankName } = req.body;
-  const projectApiKey = req.params.apiKey;
+    const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
-  const gasTank = await getReadyGasTankApiKey(
-    projectApiKey, 
-    gasTankName,
-  );
-  
-  if (!gasTank) {
-    return res.status(HttpStatusCodes.BAD_REQUEST).json(
-      { error: `Gas tank '${gasTankName}' not found` },
+    if (!gasTank) {
+        return res
+            .status(HttpStatusCodes.BAD_REQUEST)
+            .json({ error: `Gas tank '${chainId}' not found` });
+    }
+
+    const nonce = await gasTank.authorizer.refreshUserAuthorization(
+        zeroWalletAddress,
     );
-  }
 
-  const nonce = await gasTank.authorizer.refreshUserAuthorization(
-    zeroWalletAddress,
-  );
-
-  return res.status(HttpStatusCodes.OK).json({ nonce: nonce });
+    return res.status(HttpStatusCodes.OK).json({ nonce: nonce });
 }
-
-
 
 // **** Export default **** //
 
 export default {
-  paths,
-  authorize,
-  getNonce,
-  refreshNonce,
+    paths,
+    authorize,
+    getNonce,
+    refreshNonce,
 } as const;
