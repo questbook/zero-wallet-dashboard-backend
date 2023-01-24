@@ -17,23 +17,22 @@ import cors from 'cors';
 
 const app = express();
 
-
 // **** Set basic express settings **** //
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-app.use(cors({origin: "*"}));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(EnvVars.cookieProps.secret));
 
 // Show routes called in console during development
 if (EnvVars.nodeEnv === NodeEnvs.Dev) {
-  app.use(morgan('dev'));
+    app.use(morgan('dev'));
 }
 
 // Security
 if (EnvVars.nodeEnv === NodeEnvs.Production) {
-  app.use(helmet());
+    app.use(helmet());
 }
 
 // **** Add API routes **** //
@@ -41,20 +40,21 @@ if (EnvVars.nodeEnv === NodeEnvs.Production) {
 app.use('/api', BaseRouter);
 
 // Setup error handler
-app.use((
-  err: Error,
-  _: Request,
-  res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  next: NextFunction,
-) => {
-  logger.err(err, true);
-  let status = HttpStatusCodes.BAD_REQUEST;
-  if (err instanceof RouteError) {
-    status = err.status;
-  }
-  return res.status(status).json({ error: err.message });
-});
-
+app.use(
+    (
+        err: Error,
+        _: Request,
+        res: Response,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        next: NextFunction,
+    ) => {
+        logger.err(err, true);
+        let status = HttpStatusCodes.BAD_REQUEST;
+        if (err instanceof RouteError) {
+            status = err.status;
+        }
+        return res.status(status).json({ error: err.message });
+    },
+);
 
 export default app;

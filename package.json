@@ -4,7 +4,7 @@
   "scripts": {
     "build": "npx ts-node build.ts",
     "fix:format": "npx prettier \"src/**/*.ts\" --write",
-    "test:format": "prettier \"src/**/*.ts\" --list-different",
+    "test:format": "npx prettier \"src/**/*.ts\" --list-different",
     "fix:lint": "npx eslint src --ext .ts --fix",
     "lint": "npx eslint --ext .ts src/",
     "lint:tests": "npx eslint --ext .ts spec/",
