@@ -47,7 +47,7 @@ type IGetGasTanks = IBase;
 interface IPostGasTank extends IBase {
     chainId: number;
     providerURL: string;
-    whiteList: string[];
+    whitelist: string[];
 }
 
 interface IUpdateGasTank extends IBase {
@@ -146,7 +146,7 @@ async function getGasTanks(req: IReq<IGetGasTanks>, res: IRes) {
 
 async function postGasTank(req: IReq<IPostGasTank>, res: IRes) {
     const projectId = req.params.projectId;
-    const { chainId, providerURL, whiteList } = req.body;
+    const { chainId, providerURL, whitelist } = req.body;
 
     await addGasTank(
         projectId,
@@ -154,7 +154,7 @@ async function postGasTank(req: IReq<IPostGasTank>, res: IRes) {
             chainId,
             providerURL,
         },
-        whiteList,
+        whitelist,
     );
     res.status(HttpStatusCodes.OK).send();
 }
