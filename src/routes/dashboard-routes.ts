@@ -63,17 +63,21 @@ async function isValidDashboardUser(
     res: IRes,
     next: NextFunction,
 ) {
+
     const {
         webHookAttributes: { nonce, signedNonce },
     } = req.body;
+
     const dashboardProject = await projectManager.getProjectById(
-        EnvVars.dashboardProjectId,
+        projectManager.nativeProject.projectId,
         true,
     );
-    const address = ethers.utils.recoverAddress(nonce, signedNonce);
+
+    const address = ethers.utils.verifyMessage(nonce, signedNonce);
     const gasTank = await dashboardProject.getLoadedGasTank(
         EnvVars.dashboardTestGasTankChainId,
     );
+
     const isAuthorized = await gasTank.authorizer.isUserAuthorized(
         signedNonce,
         nonce,
@@ -83,6 +87,36 @@ async function isValidDashboardUser(
         return next();
     }
     res.status(HttpStatusCodes.UNAUTHORIZED).send();
+}
+
+async function isAllowedOriginDashboard(
+    req: IReq<IBase>,
+    res: IRes,
+    next: NextFunction,
+) {
+
+    const origin = req.get('origin');
+
+    if (!origin) {
+        return res.status(HttpStatusCodes.NOT_FOUND).json(
+            { error: 'Origin not found' },
+        );
+    }
+
+    const projectId = projectManager.nativeProject.projectId;
+
+    const project = await projectManager.getProjectById(projectId);
+    await project.readyPromise;
+
+    if (project?.allowedOrigins) {
+        if (!(project.allowedOrigins.includes(origin))) {
+            return res.status(HttpStatusCodes.NOT_FOUND).json(
+                { error: 'Origin not found' },
+            );
+        }
+    }
+
+    next();
 }
 
 async function isProjectOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
@@ -100,11 +134,13 @@ async function isScwOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
     const {
         webHookAttributes: { nonce, signedNonce },
     } = req.body;
-    const address = ethers.utils.recoverAddress(nonce, signedNonce);
+    const address = ethers.utils.verifyMessage(nonce, signedNonce);
 
-    const contract = ethers.ContractFactory.getContract(ownerScw, [
+    const contract = new ethers.Contract(ownerScw, [
         'function owner() view returns (address)',
-    ]);
+    ],
+    ethers.getDefaultProvider(5),
+    );
 
     // eslint-disable-next-line max-len
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
@@ -144,7 +180,10 @@ async function getGasTanks(req: IReq<IGetGasTanks>, res: IRes) {
     res.status(HttpStatusCodes.OK).json(gasTanks);
 }
 
-async function postGasTank(req: IReq<IPostGasTank>, res: IRes) {
+async function postGasTank(
+    req: IReq<IPostGasTank>,
+    res: IRes,
+) {
     const projectId = req.params.projectId;
     const { chainId, providerURL, whitelist } = req.body;
 
@@ -159,11 +198,16 @@ async function postGasTank(req: IReq<IPostGasTank>, res: IRes) {
     res.status(HttpStatusCodes.OK).send();
 }
 
-async function updateGasTank(req: IReq<IUpdateGasTank>, res: IRes) {
+async function updateGasTank(
+    req: IReq<IUpdateGasTank>,
+    res: IRes,
+) {
+
     const { projectId, chainId } = req.params;
     const { providerURL } = req.body;
 
     const gasTank = await getReadyGasTankApiKey(projectId, chainId);
+
     await gasTank.updateGasTankProviderUrl(providerURL);
     res.status(HttpStatusCodes.OK).send();
 }
@@ -172,10 +216,12 @@ async function addToGasTankWhitelist(
     req: IReq<IUpdateGasTankWhitelist>,
     res: IRes,
 ) {
+
     const { projectId, chainId } = req.params;
     const { address } = req.body;
 
     const gasTank = await getReadyGasTankApiKey(projectId, chainId);
+
     await gasTank.addToWhiteList(address);
     res.status(HttpStatusCodes.OK).send();
 }
@@ -184,10 +230,12 @@ async function deleteFromGasTankWhitelist(
     req: IReq<IUpdateGasTankWhitelist>,
     res: IRes,
 ) {
+
     const { projectId, chainId } = req.params;
     const { address } = req.body;
 
     const gasTank = await getReadyGasTankApiKey(projectId, chainId);
+
     await gasTank.removeFromWhiteList(address);
     res.status(HttpStatusCodes.OK).send();
 }
@@ -196,6 +244,7 @@ async function deleteFromGasTankWhitelist(
 
 export default {
     paths,
+    isAllowedOriginDashboard,
     isValidDashboardUser,
     isProjectOwner,
     isScwOwner,

@@ -4,7 +4,7 @@ import {
     NewGasTankParams,
 } from '@mohammadshahin/zero-wallet-dashboard-sdk';
 
-const projectManager = new ProjectsManager('./config.yaml');
+const projectManager = new ProjectsManager('./config.yaml', true);
 
 async function getReadyGasTankId(
     projectId: string,
@@ -28,6 +28,8 @@ async function getReadyGasTankApiKey(
     loadRelayer = true,
 ) {
     const project = await projectManager.getProjectByApiKey(projectId);
+    await project.readyPromise;
+    
     const chainIdNumber = parseInt(chainId, 10);
     const gasTank = await project.loadAndGetGasTankByChainId(
         chainIdNumber,

@@ -7,7 +7,8 @@ import {
 import { DeployWebHookAttributesType } from '@src/types/zerowallet';
 import { IReq, IRes } from './shared/types';
 
-import { getReadyGasTankApiKey } from '../projectManager';
+import projectManager, { getReadyGasTankApiKey } from '../projectManager';
+import { NextFunction } from 'express';
 
 // **** Variables **** //
 
@@ -42,15 +43,52 @@ interface IDeployReq {
     webHookAttributes: DeployWebHookAttributesType;
 }
 
+
+// **** Validators **** //
+
+async function isAllowedOriginGasless(
+    req: IReq,
+    res: IRes,
+    next: NextFunction,
+) {
+
+    const origin = req.get('origin');
+
+    if(!origin) {
+        return res.status(HttpStatusCodes.NOT_FOUND).json(
+            { error: 'Origin not found' },
+        );
+    }
+
+    const projectApiKey = req.params.apiKey;
+
+    const project = await projectManager.getProjectByApiKey(projectApiKey);
+    await project.readyPromise;
+
+    if (project?.allowedOrigins){
+        if(!(project.allowedOrigins.includes(origin))){
+            return res.status(HttpStatusCodes.NOT_FOUND).json(
+                { error: `Origin: ${origin} not found` },
+            );
+        }
+    }
+
+    next();
+}
+
+
+
+
 // **** Functions **** //
 
 /**
  * Build the gasless transaction
  */
 async function build(req: IReq<IBuildReq>, res: IRes) {
+
     const projectApiKey = req.params.apiKey;
     const { zeroWalletAddress, data, webHookAttributes, chainId } = req.body;
-
+    
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
     if (!gasTank) {
@@ -73,6 +111,7 @@ async function build(req: IReq<IBuildReq>, res: IRes) {
  * Send gasless transaction.
  */
 async function send(req: IReq<ISendReq>, res: IRes) {
+
     const projectApiKey = req.params.apiKey;
     const {
         execTransactionBody,
@@ -81,9 +120,9 @@ async function send(req: IReq<ISendReq>, res: IRes) {
         webHookAttributes,
         chainId,
     } = req.body;
-
+    
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
-
+    
     if (!gasTank) {
         return res
             .status(HttpStatusCodes.BAD_REQUEST)
@@ -109,9 +148,10 @@ async function send(req: IReq<ISendReq>, res: IRes) {
  * Deploy the smart contract wallet
  */
 async function deploy(req: IReq<IDeployReq>, res: IRes) {
+
     const { zeroWalletAddress, chainId, webHookAttributes } = req.body;
     const projectApiKey = req.params.apiKey;
-
+    
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
     if (!gasTank) {
@@ -132,6 +172,7 @@ async function deploy(req: IReq<IDeployReq>, res: IRes) {
 
 export default {
     paths,
+    isAllowedOriginGasless,
     build,
     send,
     deploy,

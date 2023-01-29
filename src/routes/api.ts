@@ -11,7 +11,6 @@ import authRoutes from './auth-routes';
 import gaslessRoutes from './gasless-routes';
 import dashboardRoutes from './dashboard-routes';
 
-
 // **** Init **** //
 
 const apiRouter = Router();
@@ -23,6 +22,7 @@ const authRouter = Router();
 // authorize user route
 authRouter.post(
     authRoutes.paths.authorize,
+    authRoutes.isAllowedOriginAuth,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isString(),
     (req: express.Request, res: express.Response) => {
@@ -38,6 +38,7 @@ authRouter.post(
 // get Nonce route
 authRouter.post(
     authRoutes.paths.getNonce,
+    authRoutes.isAllowedOriginAuth,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isString(),
     (req: express.Request, res: express.Response) => {
@@ -53,6 +54,7 @@ authRouter.post(
 // refresh Nonce route
 authRouter.post(
     authRoutes.paths.refreshNonce,
+    authRoutes.isAllowedOriginAuth,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isString(),
     (req: express.Request, res: express.Response) => {
@@ -74,6 +76,7 @@ const gaslessRouter = Router();
 // build transaction route
 gaslessRouter.post(
     gaslessRoutes.paths.build,
+    gaslessRoutes.isAllowedOriginGasless,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isString(),
     body('data').isString(),
@@ -91,6 +94,7 @@ gaslessRouter.post(
 // send transaction route
 gaslessRouter.post(
     gaslessRoutes.paths.send,
+    gaslessRoutes.isAllowedOriginGasless,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('signature').isString(),
     body('chainId').isString(),
@@ -109,6 +113,7 @@ gaslessRouter.post(
 // deploy transaction route
 gaslessRouter.post(
     gaslessRoutes.paths.deploy,
+    gaslessRoutes.isAllowedOriginGasless,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isString(),
     body('webHookAttributes').custom(isDeployWebHookAttributes),
@@ -128,9 +133,15 @@ apiRouter.use(gaslessRoutes.paths.basePath, gaslessRouter);
 // **** Setup dashboard routes **** //
 const dashboardRouter = Router();
 
+dashboardRouter.use(
+    dashboardRoutes.isValidDashboardUser,
+    dashboardRoutes.isScwOwner,
+);
+
 // get projects route
 dashboardRouter.post(
     dashboardRoutes.paths.projects,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     (
@@ -150,6 +161,7 @@ dashboardRouter.post(
 // post projects route
 dashboardRouter.post(
     dashboardRoutes.paths.project,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('name').isString(),
@@ -172,6 +184,7 @@ dashboardRouter.post(
 
 dashboardRouter.post(
     dashboardRoutes.paths.projectUpdate,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('name').isString(),
@@ -195,6 +208,7 @@ dashboardRouter.post(
 // get Gas Tanks route
 dashboardRouter.post(
     dashboardRoutes.paths.gasTanks,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     (
@@ -215,6 +229,7 @@ dashboardRouter.post(
 // post Gas Tanks route
 dashboardRouter.post(
     dashboardRoutes.paths.gasTank,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isInt(),
@@ -238,6 +253,7 @@ dashboardRouter.post(
 // update gas tank route
 dashboardRouter.post(
     dashboardRoutes.paths.updateGasTank,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('providerURL').isString(),
@@ -258,6 +274,7 @@ dashboardRouter.post(
 // add to Gas Tank whitelist route
 dashboardRouter.post(
     dashboardRoutes.paths.updateGasTankWhitelist,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('address').isString().isLength({ min: 42, max: 42 }),
@@ -278,6 +295,7 @@ dashboardRouter.post(
 // delete from Gas Tank whitelist route
 dashboardRouter.delete(
     dashboardRoutes.paths.updateGasTankWhitelist,
+    dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('address').isString().isLength({ min: 42, max: 42 }),
@@ -293,11 +311,6 @@ dashboardRouter.delete(
         next();
     },
     dashboardRoutes.deleteFromGasTankWhitelist,
-);
-
-dashboardRouter.use(
-    dashboardRoutes.isValidDashboardUser,
-    dashboardRoutes.isScwOwner,
 );
 
 apiRouter.use(dashboardRoutes.paths.basePath, dashboardRouter);

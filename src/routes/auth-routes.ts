@@ -2,7 +2,8 @@ import HttpStatusCodes from '@src/declarations/major/HttpStatusCodes';
 
 import { IReq, IRes } from './shared/types';
 
-import { getReadyGasTankApiKey } from '../projectManager';
+import { NextFunction } from 'express';
+import projectManager, { getReadyGasTankApiKey } from '../projectManager';
 
 // **** Variables **** //
 
@@ -21,17 +22,51 @@ interface IAuthReq {
     chainId: string;
 }
 
+// **** Validators **** //
+
+async function isAllowedOriginAuth(
+    req: IReq<IAuthReq>,
+    res: IRes,
+    next: NextFunction,
+) {
+
+    const origin = req.get('origin');
+
+    if(!origin) {
+        return res.status(HttpStatusCodes.NOT_FOUND).json(
+            { error: 'Origin not found' },
+        );
+    }
+
+    const projectApiKey = req.params.apiKey;
+
+    const project = await projectManager.getProjectByApiKey(projectApiKey);
+    await project.readyPromise;
+    
+    if (project?.allowedOrigins){
+        if(!(project.allowedOrigins.includes(origin))){
+            return res.status(HttpStatusCodes.NOT_FOUND).json(
+                { error: `Origin: ${origin} not found` },
+            );
+        }
+    }
+
+    next();
+}
+
+
 // **** Functions **** //
 
 /**
  * Add an authorized user to the database
  */
 async function authorize(req: IReq<IAuthReq>, res: IRes) {
+   
     const { zeroWalletAddress, chainId } = req.body;
     const projectApiKey = req.params.apiKey;
 
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
-
+ 
     if (!gasTank) {
         return res
             .status(HttpStatusCodes.BAD_REQUEST)
@@ -47,6 +82,7 @@ async function authorize(req: IReq<IAuthReq>, res: IRes) {
  * Get the nonce of an authorized user
  */
 async function getNonce(req: IReq<IAuthReq>, res: IRes) {
+
     const { zeroWalletAddress, chainId } = req.body;
     const projectApiKey = req.params.apiKey;
 
@@ -68,6 +104,7 @@ async function getNonce(req: IReq<IAuthReq>, res: IRes) {
 }
 
 async function refreshNonce(req: IReq<IAuthReq>, res: IRes) {
+
     const { zeroWalletAddress, chainId } = req.body;
     const projectApiKey = req.params.apiKey;
 
@@ -90,6 +127,7 @@ async function refreshNonce(req: IReq<IAuthReq>, res: IRes) {
 
 export default {
     paths,
+    isAllowedOriginAuth,
     authorize,
     getNonce,
     refreshNonce,
