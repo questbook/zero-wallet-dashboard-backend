@@ -40,6 +40,23 @@ async function getReadyGasTankApiKey(
     return gasTank;
 }
 
+async function getGasTankApiKey(
+    projectId: string,
+    chainId: string,
+) {
+    const project = await projectManager.getProjectByApiKey(projectId);
+    await project.readyPromise;
+    
+    const chainIdNumber = parseInt(chainId, 10);
+    const gasTank = await project.loadAndGetGasTankByChainId(
+        chainIdNumber,
+        false,
+    );
+
+    return gasTank;
+}
+
+
 async function getProjectsByOwner(owner: string): Promise<unknown> {
     const projects = await projectManager.getAllProjectsOwnerRaw(owner);
     return projects;
@@ -64,7 +81,9 @@ export default projectManager;
 export {
     getReadyGasTankId,
     getReadyGasTankApiKey,
+    getGasTankApiKey,
     getProjectsByOwner,
     getGasTanksRaw,
     addGasTank,
+    
 };

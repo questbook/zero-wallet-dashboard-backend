@@ -3,7 +3,9 @@ import HttpStatusCodes from '@src/declarations/major/HttpStatusCodes';
 import { IReq, IRes } from './shared/types';
 
 import { NextFunction } from 'express';
-import projectManager, { getReadyGasTankApiKey } from '../projectManager';
+import projectManager, { 
+    getReadyGasTankApiKey, getGasTankApiKey,
+} from '../projectManager';
 
 // **** Variables **** //
 
@@ -65,7 +67,7 @@ async function authorize(req: IReq<IAuthReq>, res: IRes) {
     const { zeroWalletAddress, chainId } = req.body;
     const projectApiKey = req.params.apiKey;
 
-    const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
+    const gasTank = await getGasTankApiKey(projectApiKey, chainId);
  
     if (!gasTank) {
         return res
@@ -86,7 +88,7 @@ async function getNonce(req: IReq<IAuthReq>, res: IRes) {
     const { zeroWalletAddress, chainId } = req.body;
     const projectApiKey = req.params.apiKey;
 
-    const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
+    const gasTank = await getGasTankApiKey(projectApiKey, chainId);
 
     if (!gasTank) {
         return res
