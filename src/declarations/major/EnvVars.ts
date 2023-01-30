@@ -1,5 +1,7 @@
 /* eslint-disable node/no-process-env */
 
+import { SupportedChainId } from "@mohammadshahin/zero-wallet-dashboard-sdk/build/main/constants/chains";
+
 export default {
     nodeEnv: process.env.NODE_ENV ?? '',
     port: process.env.PORT ?? 0,
@@ -23,5 +25,8 @@ export default {
     dashboardOrigin: process.env.DASHBOARD_ORIGIN ?? '',
     dashboardTestGasTankChainId:
         process.env.DASHBOARD_TEST_GAS_TANK_CHAIN_ID ?? '',
-    dashboardTestProviderUrl: process.env.DASHBOARD_TEST_PROVIDER_URL ?? '',
+    
+    dashboardTestProviderUrls: {
+        5: process.env.DASHBOARD_TEST_PROVIDER_URL_GOERLI ?? '',
+    } as { [key in SupportedChainId]: string },  
 } as const;

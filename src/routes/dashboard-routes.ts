@@ -13,6 +13,7 @@ import projectManager, {
 
 import EnvVars from '@src/declarations/major/EnvVars';
 import { NextFunction } from 'express';
+import { SupportedChainId } from '@mohammadshahin/zero-wallet-dashboard-sdk/build/main/constants/chains';
 
 // **** Variables **** //
 
@@ -45,14 +46,11 @@ interface IProject extends IBase {
 type IGetGasTanks = IBase;
 
 interface IPostGasTank extends IBase {
-    chainId: number;
-    providerURL: string;
+    chainId: SupportedChainId;
     whitelist: string[];
 }
 
-interface IUpdateGasTank extends IBase {
-    providerURL: string;
-}
+type IUpdateGasTank = IBase;
 
 interface IUpdateGasTankWhitelist extends IBase {
     address: string;
@@ -146,7 +144,9 @@ async function isScwOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
         [
             'function owner() view returns (address)',
         ],
-        new ethers.providers.JsonRpcProvider(EnvVars.dashboardTestProviderUrl),
+        new ethers.providers.JsonRpcProvider(
+            EnvVars.dashboardTestProviderUrls[5], // @TODO: have dynamic chainId
+        ),
     );
 
     // eslint-disable-next-line max-len
@@ -195,13 +195,13 @@ async function postGasTank(
 ) {
 
     const projectId = req.params.projectId;
-    const { chainId, providerURL, whitelist } = req.body;
+    const { chainId, whitelist } = req.body;
 
     await addGasTank(
         projectId,
         {
             chainId,
-            providerURL,
+            providerURL: EnvVars.dashboardTestProviderUrls[chainId],
         },
         whitelist,
     );
@@ -215,11 +215,14 @@ async function updateGasTank(
 ) {
 
     const { projectId, chainId } = req.params;
-    const { providerURL } = req.body;
 
     const gasTank = await getReadyGasTankApiKey(projectId, chainId);
 
-    await gasTank.updateGasTankProviderUrl(providerURL);
+    await gasTank.updateGasTankProviderUrl(
+        EnvVars.dashboardTestProviderUrls[
+            parseInt(chainId) as SupportedChainId
+        ],
+    );
     res.status(HttpStatusCodes.OK).send();
 }
 

@@ -233,7 +233,6 @@ dashboardRouter.post(
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isInt(),
-    body('providerURL').isString(),
     body('whitelist').isArray(),
     body('whitelist.*').isString(),
     (
@@ -256,7 +255,6 @@ dashboardRouter.post(
     dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
-    body('providerURL').isString(),
     (
         req: express.Request,
         res: express.Response,
