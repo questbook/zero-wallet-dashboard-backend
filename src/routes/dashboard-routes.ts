@@ -70,12 +70,13 @@ async function isValidDashboardUser(
 
     const dashboardProject = await projectManager.getProjectById(
         projectManager.nativeProject.projectId,
-        true,
+        false,
     );
 
     const address = ethers.utils.verifyMessage(nonce, signedNonce);
-    const gasTank = await dashboardProject.getLoadedGasTank(
-        EnvVars.dashboardTestGasTankChainId,
+    const gasTank = await dashboardProject.loadAndGetGasTankByChainId(
+        parseInt(EnvVars.dashboardTestGasTankChainId),
+        false,
     );
 
     const isAuthorized = await gasTank.authorizer.isUserAuthorized(
@@ -83,6 +84,7 @@ async function isValidDashboardUser(
         nonce,
         address,
     );
+
     if (isAuthorized) {
         return next();
     }
@@ -120,9 +122,11 @@ async function isAllowedOriginDashboard(
 }
 
 async function isProjectOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
+    
     const { projectId } = req.params;
     const { ownerScw } = req.body;
     const project = await projectManager.getProjectById(projectId);
+
     if (project.owner === ownerScw) {
         return next();
     }
@@ -130,24 +134,29 @@ async function isProjectOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
 }
 
 async function isScwOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
+
     const { ownerScw } = req.body;
     const {
         webHookAttributes: { nonce, signedNonce },
     } = req.body;
     const address = ethers.utils.verifyMessage(nonce, signedNonce);
 
-    const contract = new ethers.Contract(ownerScw, [
-        'function owner() view returns (address)',
-    ],
-    ethers.getDefaultProvider(5),
+    const contract = new ethers.Contract(
+        ownerScw, 
+        [
+            'function owner() view returns (address)',
+        ],
+        new ethers.providers.JsonRpcProvider(EnvVars.dashboardTestProviderUrl),
     );
 
     // eslint-disable-next-line max-len
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const owner = await contract.owner();
+
     if (owner === address) {
         return next();
     }
+
     res.status(HttpStatusCodes.UNAUTHORIZED).send();
 }
 
@@ -184,6 +193,7 @@ async function postGasTank(
     req: IReq<IPostGasTank>,
     res: IRes,
 ) {
+
     const projectId = req.params.projectId;
     const { chainId, providerURL, whitelist } = req.body;
 
@@ -195,6 +205,7 @@ async function postGasTank(
         },
         whitelist,
     );
+
     res.status(HttpStatusCodes.OK).send();
 }
 
