@@ -13,6 +13,7 @@ import projectManager, {
 
 import EnvVars from '@src/declarations/major/EnvVars';
 import { NextFunction } from 'express';
+// eslint-disable-next-line max-len
 import { SupportedChainId } from '@mohammadshahin/zero-wallet-dashboard-sdk/build/main/constants/chains';
 
 // **** Variables **** //
