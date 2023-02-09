@@ -171,8 +171,11 @@ async function getProjects(req: IReq<IGetProjects>, res: IRes) {
 async function postProject(req: IReq<IProject>, res: IRes) {
     const { name, ownerScw, allowedOrigins } = req.body;
 
-    await projectManager.addProject(name, ownerScw, allowedOrigins);
-    res.status(HttpStatusCodes.OK).send();
+    const project = await projectManager.addProject(
+        name, ownerScw, allowedOrigins);
+    res.status(HttpStatusCodes.OK).json({
+        projectId: project.projectId,
+    });
 }
 
 async function updateProject(req: IReq<IProject>, res: IRes) {
