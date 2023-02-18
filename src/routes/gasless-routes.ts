@@ -1,7 +1,7 @@
 import HttpStatusCodes from '@src/declarations/major/HttpStatusCodes';
 import {
     WebHookAttributesType,
-    BuildExecTransactionType,
+    BuildExecTransactionType
 } from '@mohammadshahin/zero-wallet-dashboard-sdk';
 
 import { DeployWebHookAttributesType } from '@src/types/zerowallet';
@@ -17,7 +17,7 @@ const paths = {
     basePath: '/tx',
     send: '/:apiKey/send',
     build: '/:apiKey/build',
-    deploy: '/:apiKey/deploy',
+    deploy: '/:apiKey/deploy'
 } as const;
 
 // **** Types **** //
@@ -43,21 +43,19 @@ interface IDeployReq {
     webHookAttributes: DeployWebHookAttributesType;
 }
 
-
 // **** Validators **** //
 
 async function isAllowedOriginGasless(
     req: IReq,
     res: IRes,
-    next: NextFunction,
+    next: NextFunction
 ) {
-
     const origin = req.get('origin');
 
-    if(!origin) {
-        return res.status(HttpStatusCodes.NOT_FOUND).json(
-            { error: 'Origin not found' },
-        );
+    if (!origin) {
+        return res
+            .status(HttpStatusCodes.NOT_FOUND)
+            .json({ error: 'Origin not found' });
     }
 
     const projectApiKey = req.params.apiKey;
@@ -65,19 +63,16 @@ async function isAllowedOriginGasless(
     const project = await projectManager.getProjectByApiKey(projectApiKey);
     await project.readyPromise;
 
-    if (project?.allowedOrigins){
-        if(!(project.allowedOrigins.includes(origin))){
-            return res.status(HttpStatusCodes.NOT_FOUND).json(
-                { error: `Origin: ${origin} not found` },
-            );
+    if (project?.allowedOrigins) {
+        if (!project.allowedOrigins.includes(origin)) {
+            return res
+                .status(HttpStatusCodes.NOT_FOUND)
+                .json({ error: `Origin: ${origin} not found` });
         }
     }
 
     next();
 }
-
-
-
 
 // **** Functions **** //
 
@@ -85,10 +80,9 @@ async function isAllowedOriginGasless(
  * Build the gasless transaction
  */
 async function build(req: IReq<IBuildReq>, res: IRes) {
-
     const projectApiKey = req.params.apiKey;
     const { zeroWalletAddress, data, webHookAttributes, chainId } = req.body;
-    
+
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
     if (!gasTank) {
@@ -101,7 +95,7 @@ async function build(req: IReq<IBuildReq>, res: IRes) {
         zeroWalletAddress,
         populatedTx: data,
         webHookAttributes,
-        targetContractAddress: webHookAttributes.to,
+        targetContractAddress: webHookAttributes.to
     });
 
     return res.status(HttpStatusCodes.OK).json({ safeTXBody, scwAddress });
@@ -111,18 +105,17 @@ async function build(req: IReq<IBuildReq>, res: IRes) {
  * Send gasless transaction.
  */
 async function send(req: IReq<ISendReq>, res: IRes) {
-
     const projectApiKey = req.params.apiKey;
     const {
         execTransactionBody,
         zeroWalletAddress,
         signature,
         webHookAttributes,
-        chainId,
+        chainId
     } = req.body;
-    
+
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
-    
+
     if (!gasTank) {
         return res
             .status(HttpStatusCodes.BAD_REQUEST)
@@ -130,7 +123,7 @@ async function send(req: IReq<ISendReq>, res: IRes) {
     }
 
     const { walletAddress: scwAddress } = await gasTank.doesProxyWalletExist(
-        zeroWalletAddress,
+        zeroWalletAddress
     );
 
     const txHash = await gasTank.sendGaslessTransaction({
@@ -138,7 +131,7 @@ async function send(req: IReq<ISendReq>, res: IRes) {
         zeroWalletAddress,
         scwAddress,
         signature,
-        webHookAttributes,
+        webHookAttributes
     });
 
     return res.status(HttpStatusCodes.CREATED).json({ txHash });
@@ -148,10 +141,9 @@ async function send(req: IReq<ISendReq>, res: IRes) {
  * Deploy the smart contract wallet
  */
 async function deploy(req: IReq<IDeployReq>, res: IRes) {
-
     const { zeroWalletAddress, chainId, webHookAttributes } = req.body;
     const projectApiKey = req.params.apiKey;
-    
+
     const gasTank = await getReadyGasTankApiKey(projectApiKey, chainId);
 
     if (!gasTank) {
@@ -162,7 +154,7 @@ async function deploy(req: IReq<IDeployReq>, res: IRes) {
 
     const scwAddress = await gasTank.deployProxyWallet({
         zeroWalletAddress,
-        webHookAttributes,
+        webHookAttributes
     });
 
     return res.status(HttpStatusCodes.CREATED).json({ scwAddress });
@@ -175,5 +167,5 @@ export default {
     isAllowedOriginGasless,
     build,
     send,
-    deploy,
+    deploy
 } as const;

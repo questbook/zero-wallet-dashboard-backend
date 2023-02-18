@@ -5,12 +5,12 @@ import EnvVars from '../declarations/major/EnvVars';
 
 // Errors
 const errors = {
-    validation: 'JSON-web-token validation failed.',
+    validation: 'JSON-web-token validation failed.'
 } as const;
 
 // Options
 const options = {
-    expiresIn: EnvVars.jwt.exp,
+    expiresIn: EnvVars.jwt.exp
 };
 
 // **** Functions **** //
@@ -41,5 +41,5 @@ function decode<T>(jwt: string): Promise<string | undefined | T> {
 
 export default {
     sign,
-    decode,
+    decode
 } as const;

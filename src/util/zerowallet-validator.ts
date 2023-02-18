@@ -2,7 +2,7 @@ import {
     BuildExecTransactionType,
     DeployWebHookAttributesType,
     SignedMessage,
-    WebHookAttributesType,
+    WebHookAttributesType
 } from '@mohammadshahin/zero-wallet-dashboard-sdk';
 
 const isWebHookAttributes = (attributes: {
@@ -34,7 +34,7 @@ const isWebHookAttributes = (attributes: {
 
     if (typeof attributes?.signedNonce?.transactionHash !== 'string') {
         throw new Error(
-            'WebHookAttributes.signedNonce.transactionHash is not a string',
+            'WebHookAttributes.signedNonce.transactionHash is not a string'
         );
     }
 
@@ -73,7 +73,7 @@ const isDeployWebHookAttributes = (attributes: {
 
     if (typeof attributes?.signedNonce?.transactionHash !== 'string') {
         throw new Error(
-            'WebHookAttributes.signedNonce.transactionHash is not a string',
+            'WebHookAttributes.signedNonce.transactionHash is not a string'
         );
     }
 
@@ -149,5 +149,5 @@ const isBuildExecTransaction = (attributes: {
 export {
     isWebHookAttributes,
     isBuildExecTransaction,
-    isDeployWebHookAttributes,
+    isDeployWebHookAttributes
 };

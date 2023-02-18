@@ -12,6 +12,7 @@ import HttpStatusCodes from '@src/declarations/major/HttpStatusCodes';
 import { NodeEnvs } from '@src/declarations/enums';
 import { RouteError } from '@src/declarations/classes';
 import cors from 'cors';
+import projectManager from './projectManager';
 
 // **** Init express **** //
 
@@ -46,15 +47,16 @@ app.use(
         _: Request,
         res: Response,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        next: NextFunction,
+        next: NextFunction
     ) => {
-        logger.err(err, true);
+        logger.err(err);
+        // logger.err(err, true);
         let status = HttpStatusCodes.BAD_REQUEST;
         if (err instanceof RouteError) {
             status = err.status;
         }
         return res.status(status).json({ error: err.message });
-    },
+    }
 );
 
 export default app;

@@ -1,21 +1,24 @@
 import {
     ProjectsManager,
     GasTankRawType,
-    NewGasTankParams,
+    NewGasTankParams
 } from '@mohammadshahin/zero-wallet-dashboard-sdk';
 
 const projectManager = new ProjectsManager('./config.yaml', true);
+projectManager.readyPromise.catch((err) => {
+    console.error('Error initializing project manager', err);
+});
 
 async function getReadyGasTankId(
     projectId: string,
     chainId: string,
-    loadRelayer = true,
+    loadRelayer = true
 ) {
     const project = await projectManager.getProjectById(projectId);
     const chainIdNumber = parseInt(chainId, 10);
     const gasTank = await project.loadAndGetGasTankByChainId(
         chainIdNumber,
-        loadRelayer,
+        loadRelayer
     );
     await gasTank.readyPromise;
 
@@ -25,39 +28,35 @@ async function getReadyGasTankId(
 async function getReadyGasTankApiKey(
     projectId: string,
     chainId: string,
-    loadRelayer = true,
+    loadRelayer = true
 ) {
     const project = await projectManager.getProjectByApiKey(projectId);
     await project.readyPromise;
-    
+
     const chainIdNumber = parseInt(chainId, 10);
     const gasTank = await project.loadAndGetGasTankByChainId(
         chainIdNumber,
-        loadRelayer,
+        loadRelayer
     );
     await gasTank.readyPromise;
 
     return gasTank;
 }
 
-async function getGasTankApiKey(
-    projectId: string,
-    chainId: string,
-) {
+async function getGasTankApiKey(projectId: string, chainId: string) {
     const project = await projectManager.getProjectByApiKey(projectId);
     await project.readyPromise;
-    
+
     const chainIdNumber = parseInt(chainId, 10);
     const gasTank = await project.loadAndGetGasTankByChainId(
         chainIdNumber,
-        false,
+        false
     );
 
     return gasTank;
 }
 
-
-async function getProjectsByOwner(owner: string): Promise<unknown> {
+async function getProjectsByOwner(owner: string) {
     const projects = await projectManager.getAllProjectsOwnerRaw(owner);
     return projects;
 }
@@ -71,10 +70,11 @@ async function getGasTanksRaw(projectId: string): Promise<GasTankRawType[]> {
 async function addGasTank(
     projectId: string,
     gasTankProps: NewGasTankParams,
-    whiteList: string[],
+    whiteList: string[]
 ) {
     const project = await projectManager.getProjectById(projectId);
-    await project.addGasTank(gasTankProps, whiteList);
+    const gasTank = await project.addGasTank(gasTankProps, whiteList);
+    return gasTank
 }
 
 export default projectManager;
@@ -84,6 +84,5 @@ export {
     getGasTankApiKey,
     getProjectsByOwner,
     getGasTanksRaw,
-    addGasTank,
-    
+    addGasTank
 };

@@ -32,5 +32,5 @@ function compare(pwd: string, hash: string): Promise<boolean> {
 export default {
     getHash,
     hashSync,
-    compare,
+    compare
 } as const;

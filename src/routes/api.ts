@@ -1,9 +1,9 @@
 import {
     isBuildExecTransaction,
     isWebHookAttributes,
-    isDeployWebHookAttributes,
+    isDeployWebHookAttributes
 } from '@src/util/zerowallet-validator';
-import express, { Router } from 'express';
+import express, { NextFunction, Router } from 'express';
 
 import { body, validationResult } from 'express-validator';
 
@@ -25,14 +25,15 @@ authRouter.post(
     authRoutes.isAllowedOriginAuth,
     body('zeroWalletAddress').isString().isLength({ min: 42, max: 42 }),
     body('chainId').isString(),
-    (req: express.Request, res: express.Response) => {
+    (req: express.Request, res: express.Response, next: NextFunction) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        return authRoutes.authorize(req, res);
+        next()
     },
+    authRoutes.authorize
 );
 
 // get Nonce route
@@ -48,7 +49,7 @@ authRouter.post(
         }
 
         return authRoutes.getNonce(req, res);
-    },
+    }
 );
 
 // refresh Nonce route
@@ -64,7 +65,7 @@ authRouter.post(
         }
 
         return authRoutes.refreshNonce(req, res);
-    },
+    }
 );
 
 // add authRouter
@@ -88,7 +89,7 @@ gaslessRouter.post(
         }
 
         return gaslessRoutes.build(req, res);
-    },
+    }
 );
 
 // send transaction route
@@ -107,7 +108,7 @@ gaslessRouter.post(
         }
 
         return gaslessRoutes.send(req, res);
-    },
+    }
 );
 
 // deploy transaction route
@@ -124,7 +125,7 @@ gaslessRouter.post(
         }
 
         return gaslessRoutes.deploy(req, res);
-    },
+    }
 );
 
 // Add gaslessRouter
@@ -135,7 +136,7 @@ const dashboardRouter = Router();
 
 dashboardRouter.use(
     dashboardRoutes.isValidDashboardUser,
-    dashboardRoutes.isScwOwner,
+    dashboardRoutes.isScwOwner
 );
 
 // get projects route
@@ -147,7 +148,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -155,7 +156,7 @@ dashboardRouter.post(
         }
         next();
     },
-    dashboardRoutes.getProjects,
+    dashboardRoutes.getProjects
 );
 
 // post projects route
@@ -170,7 +171,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -179,7 +180,7 @@ dashboardRouter.post(
 
         next();
     },
-    dashboardRoutes.postProject,
+    dashboardRoutes.postProject
 );
 
 dashboardRouter.post(
@@ -193,7 +194,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -202,7 +203,7 @@ dashboardRouter.post(
 
         next();
     },
-    dashboardRoutes.updateProject,
+    dashboardRoutes.updateProject
 );
 
 // get Gas Tanks route
@@ -214,7 +215,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -223,7 +224,7 @@ dashboardRouter.post(
 
         next();
     },
-    dashboardRoutes.getGasTanks,
+    dashboardRoutes.getGasTanks
 );
 
 // post Gas Tanks route
@@ -238,7 +239,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -246,7 +247,7 @@ dashboardRouter.post(
         }
         next();
     },
-    dashboardRoutes.postGasTank,
+    dashboardRoutes.postGasTank
 );
 
 // update gas tank route
@@ -258,7 +259,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -266,12 +267,12 @@ dashboardRouter.post(
         }
         next();
     },
-    dashboardRoutes.updateGasTank,
+    dashboardRoutes.updateGasTank
 );
 
 // add to Gas Tank whitelist route
 dashboardRouter.post(
-    dashboardRoutes.paths.updateGasTankWhitelist,
+    dashboardRoutes.paths.updateGasTankWhitelistAdd,
     dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
@@ -279,7 +280,7 @@ dashboardRouter.post(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -287,12 +288,12 @@ dashboardRouter.post(
         }
         next();
     },
-    dashboardRoutes.addToGasTankWhitelist,
+    dashboardRoutes.addToGasTankWhitelist
 );
 
 // delete from Gas Tank whitelist route
-dashboardRouter.delete(
-    dashboardRoutes.paths.updateGasTankWhitelist,
+dashboardRouter.post(
+    dashboardRoutes.paths.updateGasTankWhitelistDelete,
     dashboardRoutes.isAllowedOriginDashboard,
     body('webHookAttributes').custom(isDeployWebHookAttributes),
     body('ownerScw').isString().isLength({ min: 42, max: 42 }),
@@ -300,7 +301,7 @@ dashboardRouter.delete(
     (
         req: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        next: express.NextFunction
     ) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -308,7 +309,7 @@ dashboardRouter.delete(
         }
         next();
     },
-    dashboardRoutes.deleteFromGasTankWhitelist,
+    dashboardRoutes.deleteFromGasTankWhitelist
 );
 
 apiRouter.use(dashboardRoutes.paths.basePath, dashboardRouter);
