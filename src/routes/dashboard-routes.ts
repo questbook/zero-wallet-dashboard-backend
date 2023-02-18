@@ -8,7 +8,7 @@ import projectManager, {
     addGasTank,
     getGasTanksRaw,
     getProjectsByOwner,
-    getReadyGasTankApiKey,
+    getReadyGasTankId
 } from '../projectManager';
 
 import EnvVars from '@src/declarations/major/EnvVars';
@@ -27,7 +27,10 @@ const paths = {
     gasTanks: '/project/:projectId/gasTanks',
     gasTank: '/project/:projectId/gasTank',
     updateGasTank: '/project/:projectId/gasTank/:chainId',
-    updateGasTankWhitelist: '/project/:projectId/gasTank/:chainId/whitelist',
+    updateGasTankWhitelistAdd:
+        '/project/:projectId/gasTank/:chainId/whitelist/add',
+    updateGasTankWhitelistDelete:
+        '/project/:projectId/gasTank/:chainId/whitelist/delete'
 } as const;
 
 // **** Types **** //
@@ -60,28 +63,27 @@ interface IUpdateGasTankWhitelist extends IBase {
 async function isValidDashboardUser(
     req: IReq<IBase>,
     res: IRes,
-    next: NextFunction,
+    next: NextFunction
 ) {
-
     const {
-        webHookAttributes: { nonce, signedNonce },
+        webHookAttributes: { nonce, signedNonce }
     } = req.body;
 
     const dashboardProject = await projectManager.getProjectById(
         projectManager.nativeProject.projectId,
-        false,
+        false
     );
 
     const address = ethers.utils.verifyMessage(nonce, signedNonce);
     const gasTank = await dashboardProject.loadAndGetGasTankByChainId(
         parseInt(EnvVars.dashboardTestGasTankChainId),
-        false,
+        false
     );
 
     const isAuthorized = await gasTank.authorizer.isUserAuthorized(
         signedNonce,
         nonce,
-        address,
+        address
     );
 
     if (isAuthorized) {
@@ -93,15 +95,14 @@ async function isValidDashboardUser(
 async function isAllowedOriginDashboard(
     req: IReq<IBase>,
     res: IRes,
-    next: NextFunction,
+    next: NextFunction
 ) {
-
     const origin = req.get('origin');
 
     if (!origin) {
-        return res.status(HttpStatusCodes.NOT_FOUND).json(
-            { error: 'Origin not found' },
-        );
+        return res
+            .status(HttpStatusCodes.NOT_FOUND)
+            .json({ error: 'Origin not found' });
     }
 
     const projectId = projectManager.nativeProject.projectId;
@@ -110,10 +111,10 @@ async function isAllowedOriginDashboard(
     await project.readyPromise;
 
     if (project?.allowedOrigins) {
-        if (!(project.allowedOrigins.includes(origin))) {
-            return res.status(HttpStatusCodes.NOT_FOUND).json(
-                { error: 'Origin not found' },
-            );
+        if (!project.allowedOrigins.includes(origin)) {
+            return res
+                .status(HttpStatusCodes.NOT_FOUND)
+                .json({ error: 'Origin not found' });
         }
     }
 
@@ -121,7 +122,6 @@ async function isAllowedOriginDashboard(
 }
 
 async function isProjectOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
-    
     const { projectId } = req.params;
     const { ownerScw } = req.body;
     const project = await projectManager.getProjectById(projectId);
@@ -133,21 +133,18 @@ async function isProjectOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
 }
 
 async function isScwOwner(req: IReq<IBase>, res: IRes, next: NextFunction) {
-
     const { ownerScw } = req.body;
     const {
-        webHookAttributes: { nonce, signedNonce },
+        webHookAttributes: { nonce, signedNonce }
     } = req.body;
     const address = ethers.utils.verifyMessage(nonce, signedNonce);
 
     const contract = new ethers.Contract(
-        ownerScw, 
-        [
-            'function owner() view returns (address)',
-        ],
+        ownerScw,
+        ['function owner() view returns (address)'],
         new ethers.providers.JsonRpcProvider(
-            EnvVars.dashboardTestProviderUrls[5], // @TODO: have dynamic chainId
-        ),
+            EnvVars.dashboardTestProviderUrls[5] // @TODO: have dynamic chainId
+        )
     );
 
     // eslint-disable-next-line max-len
@@ -170,11 +167,13 @@ async function getProjects(req: IReq<IGetProjects>, res: IRes) {
 
 async function postProject(req: IReq<IProject>, res: IRes) {
     const { name, ownerScw, allowedOrigins } = req.body;
-
     const project = await projectManager.addProject(
-        name, ownerScw, allowedOrigins);
+        name,
+        ownerScw,
+        allowedOrigins
+    );
     res.status(HttpStatusCodes.OK).json({
-        projectId: project.projectId,
+        projectId: project.projectId
     });
 }
 
@@ -193,52 +192,41 @@ async function getGasTanks(req: IReq<IGetGasTanks>, res: IRes) {
     res.status(HttpStatusCodes.OK).json(gasTanks);
 }
 
-async function postGasTank(
-    req: IReq<IPostGasTank>,
-    res: IRes,
-) {
-
+async function postGasTank(req: IReq<IPostGasTank>, res: IRes) {
     const projectId = req.params.projectId;
     const { chainId, whitelist } = req.body;
 
-    await addGasTank(
+    const gasTank = await addGasTank(
         projectId,
         {
             chainId,
-            providerURL: EnvVars.dashboardTestProviderUrls[chainId],
+            providerURL: EnvVars.dashboardTestProviderUrls[chainId]
         },
-        whitelist,
+        whitelist
     );
-
-    res.status(HttpStatusCodes.OK).send();
+    
+    res.status(HttpStatusCodes.OK).json(gasTank);
 }
 
-async function updateGasTank(
-    req: IReq<IUpdateGasTank>,
-    res: IRes,
-) {
-
+async function updateGasTank(req: IReq<IUpdateGasTank>, res: IRes) {
     const { projectId, chainId } = req.params;
 
-    const gasTank = await getReadyGasTankApiKey(projectId, chainId);
+    const gasTank = await getReadyGasTankId(projectId, chainId);
 
     await gasTank.updateGasTankProviderUrl(
-        EnvVars.dashboardTestProviderUrls[
-            parseInt(chainId) as SupportedChainId
-        ],
+        EnvVars.dashboardTestProviderUrls[parseInt(chainId) as SupportedChainId]
     );
     res.status(HttpStatusCodes.OK).send();
 }
 
 async function addToGasTankWhitelist(
     req: IReq<IUpdateGasTankWhitelist>,
-    res: IRes,
+    res: IRes
 ) {
-
     const { projectId, chainId } = req.params;
     const { address } = req.body;
 
-    const gasTank = await getReadyGasTankApiKey(projectId, chainId);
+    const gasTank = await getReadyGasTankId(projectId, chainId);
 
     await gasTank.addToWhiteList(address);
     res.status(HttpStatusCodes.OK).send();
@@ -246,13 +234,12 @@ async function addToGasTankWhitelist(
 
 async function deleteFromGasTankWhitelist(
     req: IReq<IUpdateGasTankWhitelist>,
-    res: IRes,
+    res: IRes
 ) {
-
     const { projectId, chainId } = req.params;
     const { address } = req.body;
 
-    const gasTank = await getReadyGasTankApiKey(projectId, chainId);
+    const gasTank = await getReadyGasTankId(projectId, chainId);
 
     await gasTank.removeFromWhiteList(address);
     res.status(HttpStatusCodes.OK).send();
@@ -273,5 +260,5 @@ export default {
     updateProject,
     updateGasTank,
     addToGasTankWhitelist,
-    deleteFromGasTankWhitelist,
+    deleteFromGasTankWhitelist
 } as const;
