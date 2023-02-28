@@ -49,8 +49,8 @@ app.use(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         next: NextFunction
     ) => {
-        logger.err(err);
-        // logger.err(err, true);
+        // logger.err(err);
+        logger.err(err, true);
         let status = HttpStatusCodes.BAD_REQUEST;
         if (err instanceof RouteError) {
             status = err.status;

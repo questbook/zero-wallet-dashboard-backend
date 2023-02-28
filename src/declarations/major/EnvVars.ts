@@ -30,7 +30,7 @@ export default {
     dashboardTestProviderUrls: {
         5: process.env.DASHBOARD_TEST_PROVIDER_URL_GOERLI ?? '',
         10: process.env.DASHBOARD_TEST_PROVIDER_URL_OPTIMISM ?? '',
-        137: process.env.DASHBOARD_TEXT_PROVIDER_URL_POLYGON ?? '',
-        42220: process.env.DASHBOARD_TEXT_PROVIDER_URL_CELO ?? '',
+        137: process.env.DASHBOARD_TEST_PROVIDER_URL_POLYGON ?? '',
+        42220: process.env.DASHBOARD_TEST_PROVIDER_URL_CELO ?? '',
     } as { [key in SupportedChainId]: string }
 } as const;

@@ -4,7 +4,7 @@ import {
     NewGasTankParams
 } from '@mohammadshahin/zero-wallet-dashboard-sdk';
 
-const projectManager = new ProjectsManager('./config.yaml', true);
+const projectManager = new ProjectsManager('./config.yaml');
 projectManager.readyPromise.catch((err) => {
     console.error('Error initializing project manager', err);
 });
