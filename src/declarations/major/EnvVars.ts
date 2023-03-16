@@ -1,7 +1,7 @@
 /* eslint-disable node/no-process-env */
 
 // eslint-disable-next-line max-len
-import { SupportedChainId } from '@mohammadshahin/zero-wallet-dashboard-sdk/build/main/constants/chains';
+import { SupportedChainId } from '@mohammadshahin/zero-wallet-dashboard-sdk';
 
 export default {
     nodeEnv: process.env.NODE_ENV ?? '',
