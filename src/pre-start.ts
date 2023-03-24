@@ -18,17 +18,18 @@ const options = commandLineArgs([
     {
         name: 'env',
         alias: 'e',
-        defaultValue: 'development',
+        defaultValue: 'docker',
         type: String
     }
 ]);
 
 // **** Set the env file **** //
+if (options.env !== 'docker') {
+    const result2 = dotenv.config({
+        path: path.join(__dirname, `../env/${String(options.env)}.env`)
+    });
 
-const result2 = dotenv.config({
-    path: path.join(__dirname, `../env/${String(options.env)}.env`)
-});
-
-if (result2.error) {
-    throw result2.error;
+    if (result2.error) {
+        throw result2.error;
+    }
 }
