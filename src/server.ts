@@ -12,7 +12,6 @@ import HttpStatusCodes from '@src/declarations/major/HttpStatusCodes';
 import { NodeEnvs } from '@src/declarations/enums';
 import { RouteError } from '@src/declarations/classes';
 import cors from 'cors';
-import projectManager from './projectManager';
 
 // **** Init express **** //
 
